@@ -5,11 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Track Status | Ram Kishan's</title>
     
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest_user.json">
     <meta name="theme-color" content="#ea580c">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1046/1046755.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -24,17 +23,21 @@
             background-size: 20px 20px;
         }
         .brand-font { font-family: 'Playfair Display', serif; }
+        
+        /* Smooth Fade In */
         .fade-in { animation: fadeIn 0.5s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Pulse Animation for Waiting */
         .pulse-soft { animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-4 pb-20">
 
-    <div id="installContainer" class="hidden w-full max-w-sm mb-4">
-        <button id="btnInstall" class="w-full bg-black text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg">
-            <i class="fas fa-download"></i> Install App
+    <div id="installContainer" class="hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-xs px-4">
+        <button id="btnInstall" class="w-full bg-slate-900 text-white py-3 rounded-full font-bold shadow-2xl flex items-center justify-center gap-2 border border-slate-700 animate-bounce">
+            <i class="fas fa-download text-orange-500"></i> Install App
         </button>
     </div>
 
@@ -50,7 +53,7 @@
         <div class="p-8">
             <div class="text-center mb-6">
                 <h2 class="text-xl font-bold text-gray-800">Check Status</h2>
-                <p class="text-gray-400 text-sm mt-1">Enter your mobile number</p>
+                <p class="text-gray-400 text-sm mt-1">Enter your registered mobile number</p>
             </div>
 
             <div class="relative group mb-6">
@@ -60,20 +63,26 @@
                 <input type="tel" id="userPhone" placeholder="Mobile Number" class="w-full pl-12 pr-4 py-4 bg-orange-50 border border-orange-100 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 font-bold text-gray-800 tracking-widest text-lg transition-all shadow-inner">
             </div>
 
-            <button id="btnSearch" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold text-lg shadow-xl hover:bg-slate-800 active:scale-95 transition-all">
+            <button id="btnSearch" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold text-lg shadow-xl shadow-slate-900/20 hover:bg-slate-800 active:scale-95 transition-all">
                 Find My Token
             </button>
         </div>
     </div>
 
     <div id="resultCard" class="hidden w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden fade-in relative">
+        
         <div id="statusHeader" class="bg-amber-400 p-8 text-center text-white transition-colors duration-500">
-            <div id="statusIcon" class="text-5xl mb-3 drop-shadow-md"><i class="fas fa-clock"></i></div>
+            <div id="statusIcon" class="text-5xl mb-3 drop-shadow-md">
+                <i class="fas fa-clock"></i>
+            </div>
             <h2 id="statusTitle" class="text-3xl font-black uppercase tracking-widest drop-shadow-sm">WAITING</h2>
             <p id="statusMsg" class="font-medium opacity-90 mt-1">Please wait in the lobby</p>
         </div>
 
-        <div class="p-8 text-center bg-white relative">
+        <div class="p-8 text-center relative bg-white">
+            <div class="absolute top-0 left-0 w-6 h-6 bg-[#f8fafc] -translate-x-1/2 -translate-y-1/2 rounded-full shadow-inner"></div>
+            <div class="absolute top-0 right-0 w-6 h-6 bg-[#f8fafc] translate-x-1/2 -translate-y-1/2 rounded-full shadow-inner"></div>
+
             <p class="text-xs font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Token Number</p>
             <div id="dispToken" class="text-7xl font-black text-slate-800 tracking-tighter mb-6">#---</div>
             
@@ -82,6 +91,7 @@
                     <i class="fas fa-user-circle text-gray-400"></i>
                     <h3 id="dispName" class="font-bold text-gray-800 text-lg">Guest</h3>
                 </div>
+                
                 <div class="flex justify-center gap-4 mt-3 pt-3 border-t border-gray-200">
                     <div class="text-center">
                         <div class="text-xs text-gray-400 uppercase font-bold">Guests</div>
@@ -95,12 +105,42 @@
                 </div>
             </div>
 
-            <button onclick="location.reload()" class="mt-8 text-sm text-gray-400 font-bold hover:text-orange-600 transition underline">Check another number</button>
+            <button onclick="location.reload()" class="mt-8 text-sm text-gray-400 font-bold hover:text-orange-600 transition underline decoration-2 decoration-orange-200">
+                Check another number
+            </button>
         </div>
     </div>
 
+    <div id="thankYouCard" class="hidden w-full max-w-sm bg-white rounded-3xl shadow-2xl p-10 text-center border border-green-100 fade-in">
+        <div class="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-inner">
+            <i class="fas fa-check"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Visit Completed</h2>
+        <p class="text-gray-500 mb-8 leading-relaxed">Thank you for dining at Ram Kishan's. We hope to serve you again soon!</p>
+        
+        <button onclick="location.reload()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold shadow-lg">
+            Close
+        </button>
+    </div>
+
     <script type="module">
-        // PWA INSTALL LOGIC
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+        import { getFirestore, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+
+        // FIREBASE CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyAVZfBaUEQxszbuDXsoFJ6uW2_5XqBulRE",
+            authDomain: "waiting-9617c.firebaseapp.com",
+            projectId: "waiting-9617c",
+            storageBucket: "waiting-9617c.firebasestorage.app",
+            messagingSenderId: "698708284819",
+            appId: "1:698708284819:web:3732cf42140cba84494466"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- PWA INSTALLATION LOGIC ---
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js');
         }
@@ -126,49 +166,65 @@
             }
         });
 
-        // FIREBASE LOGIC
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-        import { getFirestore, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAVZfBaUEQxszbuDXsoFJ6uW2_5XqBulRE",
-            authDomain: "waiting-9617c.firebaseapp.com",
-            projectId: "waiting-9617c",
-            storageBucket: "waiting-9617c.firebasestorage.app",
-            messagingSenderId: "698708284819",
-            appId: "1:698708284819:web:3732cf42140cba84494466"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
+        // --- SEARCH & TRACKING LOGIC ---
         document.getElementById('btnSearch').addEventListener('click', () => {
             const phoneInput = document.getElementById('userPhone').value.trim();
             const btn = document.getElementById('btnSearch');
-            if (!phoneInput) return alert("Please enter mobile number.");
 
+            if (!phoneInput) {
+                alert("Please enter a valid mobile number.");
+                return;
+            }
+
+            // UI Loading
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Finding...';
             btn.disabled = true;
+            btn.classList.add('opacity-75');
 
             const q = query(collection(db, "guests"), where("phone", "==", phoneInput));
 
             onSnapshot(q, (snapshot) => {
                 if (snapshot.empty) {
-                    alert("No booking found! Ask reception.");
+                    alert("No active booking found. Please ask reception.");
                     btn.innerHTML = 'Find My Token';
                     btn.disabled = false;
+                    btn.classList.remove('opacity-75');
                     return;
                 }
+
+                // Get Latest Entry
                 const docs = [];
                 snapshot.forEach(doc => docs.push(doc.data()));
                 docs.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-                updateUI(docs[0]);
+                
+                const data = docs[0]; 
+                updateUI(data);
+
+            }, (error) => {
+                console.error("Error:", error);
+                alert("Connection failed. Check internet.");
+                btn.innerHTML = 'Try Again';
+                btn.disabled = false;
             });
         });
 
+        // --- UPDATE SCREEN UI ---
         function updateUI(data) {
+            // Hide Search Screen
             document.getElementById('searchCard').classList.add('hidden');
+
+            // CHECK STATUS: If History/Checkout -> Show Thank You
+            if (data.status === 'history') {
+                document.getElementById('resultCard').classList.add('hidden');
+                document.getElementById('thankYouCard').classList.remove('hidden');
+                return;
+            }
+
+            // Else Show Result Card
+            document.getElementById('thankYouCard').classList.add('hidden');
             document.getElementById('resultCard').classList.remove('hidden');
+
+            // Fill Data
             document.getElementById('dispToken').innerText = "#" + data.token;
             document.getElementById('dispName').innerText = data.name;
             document.getElementById('dispPax').innerText = data.pax;
@@ -180,25 +236,45 @@
             const msg = document.getElementById('statusMsg');
 
             if (data.status === 'called') {
+                // READY
                 header.className = "bg-green-600 p-8 text-center text-white transition-colors duration-500 shadow-lg";
                 title.innerText = "TABLE READY!";
                 msg.innerText = `Proceed to Table ${data.table}`;
                 icon.innerHTML = '<i class="fas fa-utensils"></i>';
-                icon.className = "text-5xl mb-3 animate-bounce";
-                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                icon.className = "text-5xl mb-3 animate-bounce drop-shadow-md";
+                launchConfetti();
+
             } else if (data.status === 'seated') {
+                // SEATED
                 header.className = "bg-slate-800 p-8 text-center text-white transition-colors duration-500";
                 title.innerText = "SEATED";
-                msg.innerText = "Enjoy your meal!";
+                msg.innerText = "Enjoy your meal at Ram Kishan's";
                 icon.innerHTML = '<i class="fas fa-check-circle"></i>';
                 icon.className = "text-5xl mb-3";
+
             } else {
+                // WAITING
                 header.className = "bg-amber-500 p-8 text-center text-white transition-colors duration-500";
                 title.innerText = "WAITING";
-                msg.innerText = "Preparing your table...";
-                icon.innerHTML = '<i class="fas fa-hourglass-half"></i>';
+                msg.innerText = "We are preparing your table...";
+                icon.innerHTML = '<i class="fas fa-clock"></i>';
                 icon.className = "text-5xl mb-3 pulse-soft";
             }
+        }
+
+        // --- CONFETTI ---
+        function launchConfetti() {
+            var duration = 3 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+            function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+            var interval = setInterval(function() {
+              var timeLeft = animationEnd - Date.now();
+              if (timeLeft <= 0) return clearInterval(interval);
+              var particleCount = 50 * (timeLeft / duration);
+              confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+              confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
         }
     </script>
 </body>

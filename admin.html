@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Portal | Ram Kishan's</title>
     
+    <link rel="manifest" href="manifest_admin.json">
+    <meta name="theme-color" content="#ea580c">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -32,9 +35,19 @@
         .dot-green { background-color: #22c55e; box-shadow: 0 0 0 2px #dcfce7; }
         .dot-red { background-color: #ef4444; box-shadow: 0 0 0 2px #fee2e2; }
         .dot-yellow { background-color: #eab308; box-shadow: 0 0 0 2px #fef9c3; }
+
+        /* Fade Animation */
+        .fade-view { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="text-slate-800">
+
+    <div id="installManager" class="hidden fixed bottom-6 right-6 z-[200]">
+        <button id="btnInstAdmin" class="bg-slate-900 text-white px-6 py-3 rounded-full font-bold shadow-2xl flex items-center gap-2 hover:bg-slate-800 transition">
+            <i class="fas fa-download text-orange-500"></i> Install App
+        </button>
+    </div>
 
     <div id="loginOverlay" class="fixed inset-0 login-bg z-[100] flex items-center justify-center">
         <div class="bg-white/95 backdrop-blur p-8 rounded-3xl shadow-2xl w-full max-w-sm text-center border border-white/20">
@@ -97,6 +110,9 @@
                     <h2 id="pageTitle" class="text-xl font-bold text-gray-800">Dashboard Overview</h2>
                 </div>
                 <div class="flex items-center gap-4">
+                    <a href="tv.html" target="_blank" class="hidden md:flex items-center gap-2 text-xs font-bold text-orange-600 bg-orange-50 px-3 py-1.5 rounded-lg hover:bg-orange-100 transition">
+                        <i class="fas fa-tv"></i> Open TV
+                    </a>
                     <div class="text-right hidden sm:block">
                         <div class="text-sm font-bold text-gray-800">Manager Account</div>
                         <div class="text-xs text-green-500 font-bold"><span class="status-dot dot-green"></span>Online</div>
@@ -145,10 +161,10 @@
                         <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                             <h3 class="font-bold text-gray-800 mb-4">Quick Add Guest</h3>
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                <input type="text" id="qName" placeholder="Name" class="p-3 bg-gray-50 border rounded-xl font-semibold">
-                                <input type="tel" id="qPhone" placeholder="Mobile" class="p-3 bg-gray-50 border rounded-xl font-semibold">
-                                <input type="number" id="qPax" placeholder="Pax" class="p-3 bg-gray-50 border rounded-xl font-semibold">
-                                <button onclick="quickAdd()" class="bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-700 transition">ADD</button>
+                                <input type="text" id="qName" placeholder="Name" class="p-3 bg-gray-50 border rounded-xl font-semibold outline-none focus:ring-2 ring-orange-500">
+                                <input type="tel" id="qPhone" placeholder="Mobile" class="p-3 bg-gray-50 border rounded-xl font-semibold outline-none focus:ring-2 ring-orange-500">
+                                <input type="number" id="qPax" placeholder="Pax" class="p-3 bg-gray-50 border rounded-xl font-semibold outline-none focus:ring-2 ring-orange-500">
+                                <button onclick="quickAdd()" class="bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-700 transition active:scale-95">ADD</button>
                             </div>
                         </div>
                         
@@ -194,7 +210,7 @@
 
                 <div id="view-floor" class="hidden fade-view">
                     <div class="flex justify-end mb-4">
-                        <button onclick="addTable()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-md flex items-center gap-2">
+                        <button onclick="addTable()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-md flex items-center gap-2 transition active:scale-95">
                             <i class="fas fa-plus"></i> Add New Table
                         </button>
                     </div>
@@ -214,7 +230,7 @@
                                         <th class="p-4">Time</th>
                                         <th class="p-4">Guest</th>
                                         <th class="p-4">Status</th>
-                                        <th class="p-4">Table</th>
+                                        <th class="p-4">Table Cleared</th>
                                     </tr>
                                 </thead>
                                 <tbody id="historyBody" class="divide-y divide-gray-50 text-sm">
@@ -247,6 +263,22 @@
         // --- GLOBAL VARIABLES ---
         let allGuests = [];
         let allTables = [];
+
+        // --- 0. APP INSTALLATION ---
+        if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+        let defP;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault(); defP = e;
+            document.getElementById('installManager').classList.remove('hidden');
+        });
+        document.getElementById('btnInstAdmin').addEventListener('click', async () => {
+            if(defP) {
+                defP.prompt();
+                const { outcome } = await defP.userChoice;
+                if(outcome === 'accepted') document.getElementById('installManager').classList.add('hidden');
+                defP = null;
+            }
+        });
 
         // --- 1. AUTHENTICATION ---
         window.attemptLogin = () => {
@@ -307,13 +339,11 @@
                 if(g.status === 'waiting') waitCount++;
                 if(g.status === 'seated') seatedCount++;
 
-                // Queue Table Render (Waiting/Called)
-                if(g.status === 'waiting' || g.status === 'called') {
-                    renderQueueRow(tbody, g);
-                } 
-                // History Table Render (Seated)
-                else {
+                // Filter Logic
+                if(g.status === 'history') {
                     renderHistoryRow(hbody, g);
+                } else {
+                    renderQueueRow(tbody, g);
                 }
             });
 
@@ -351,7 +381,8 @@
         function renderQueueRow(container, g) {
             let badge = g.status === 'waiting' 
                 ? `<span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold border border-yellow-200">WAITING</span>`
-                : `<span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold border border-blue-200 animate-pulse">CALLED</span>`;
+                : (g.status === 'called' ? `<span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold border border-blue-200 animate-pulse">CALLED</span>`
+                : `<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold border border-green-200">SEATED</span>`);
 
             let prefs = [];
             if(g.area) prefs.push(`<i class="fas fa-map-marker-alt text-gray-400"></i> ${g.area}`);
@@ -362,14 +393,18 @@
             let buttons = '';
             if(g.status === 'waiting') {
                 buttons = `
-                    <button onclick="assignPrompt('${g.id}', '${g.name}', '${g.pax}')" class="bg-slate-900 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-slate-700 shadow transition mr-2">Assign Table</button>
+                    <button onclick="assignPrompt('${g.id}', '${g.name}', '${g.pax}')" class="bg-slate-900 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-slate-700 shadow transition mr-2">Assign</button>
                     <button onclick="editGuest('${g.id}')" class="text-gray-400 hover:text-blue-600 p-2"><i class="fas fa-edit"></i></button>
                     <button onclick="deleteGuest('${g.id}')" class="text-gray-400 hover:text-red-600 p-2"><i class="fas fa-trash"></i></button>
                 `;
-            } else {
+            } else if(g.status === 'called') {
                 buttons = `
-                    <button onclick="markSeated('${g.id}')" class="bg-green-600 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-green-700 shadow mr-2"><i class="fas fa-check"></i> Seated</button>
+                    <button onclick="markSeated('${g.id}')" class="bg-green-600 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-green-700 shadow mr-2">Seated</button>
                     <button onclick="sendWA('${g.phone}', '${g.name}', '${g.table}')" class="bg-green-100 text-green-600 p-2 rounded-lg hover:bg-green-200 transition"><i class="fab fa-whatsapp text-lg"></i></button>
+                `;
+            } else if (g.status === 'seated') {
+                buttons = `
+                    <button onclick="checkoutGuest('${g.id}', '${g.table}')" class="bg-red-50 text-red-600 px-3 py-2 rounded-lg text-xs font-bold border border-red-200 hover:bg-red-100 shadow-sm">Checkout & Free</button>
                 `;
             }
 
@@ -389,7 +424,6 @@
         }
 
         function renderHistoryRow(container, g) {
-            // Convert Firestore Timestamp to readable time
             let timeStr = "Today";
             if(g.createdAt && g.createdAt.seconds) {
                 const date = new Date(g.createdAt.seconds * 1000);
@@ -400,8 +434,8 @@
                 <tr class="hover:bg-gray-50">
                     <td class="p-4 text-gray-500 font-mono text-xs">${timeStr}</td>
                     <td class="p-4 font-bold text-gray-700">${g.name} <span class="text-gray-400 font-normal">(${g.pax} Pax)</span></td>
-                    <td class="p-4"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-bold">SEATED</span></td>
-                    <td class="p-4 font-bold text-gray-600">${g.table}</td>
+                    <td class="p-4"><span class="bg-gray-200 text-gray-600 px-2 py-1 rounded text-xs font-bold">COMPLETED</span></td>
+                    <td class="p-4 text-xs font-bold text-gray-500">${g.table}</td>
                 </tr>
             `;
         }
@@ -436,26 +470,21 @@
 
         // --- 5. ACTIONS ---
 
-        // Quick Add from Dashboard
         window.quickAdd = async () => {
             const n = document.getElementById('qName').value;
             const p = document.getElementById('qPhone').value;
             const x = document.getElementById('qPax').value;
             if(!n) return;
-            
             await addDoc(collection(db, "guests"), {
                 name: n, phone: p, pax: x, token: Math.floor(100+Math.random()*900),
                 status: 'waiting', createdAt: serverTimestamp(), area: 'Any', preference: 'Regular'
             });
-            
-            // Clear inputs
             document.getElementById('qName').value = "";
             document.getElementById('qPhone').value = "";
             document.getElementById('qPax').value = "";
             Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Guest Added', showConfirmButton: false, timer: 1500 });
         };
 
-        // Assign Table
         window.assignPrompt = async (gid, name, pax) => {
             const freeTables = allTables.filter(t => t.status === 'free');
             let opts = {};
@@ -484,6 +513,20 @@
             await updateDoc(doc(db, "guests", id), { status: 'seated' });
         };
 
+        window.checkoutGuest = async (gid, tName) => {
+            if(confirm("Confirm Checkout? This will free the table and clear the guest.")) {
+                // 1. Move Guest to History
+                await updateDoc(doc(db, "guests", gid), { status: 'history' });
+                
+                // 2. Free the Table (Search by name)
+                const qT = query(collection(db, "tables"), where("name", "==", tName));
+                const snap = await getDocs(qT);
+                snap.forEach(async d => {
+                    await updateDoc(doc(db, "tables", d.id), { status: 'free' });
+                });
+            }
+        };
+
         window.forceFree = async (tid) => {
             if(confirm("Force free this table?")) {
                 await updateDoc(doc(db, "tables", tid), { status: 'free' });
@@ -502,20 +545,14 @@
         window.deleteTable = async (id) => { if(confirm("Delete this table?")) await deleteDoc(doc(db, "tables", id)); };
         window.deleteGuest = async (id) => { if(confirm("Remove guest?")) await deleteDoc(doc(db, "guests", id)); };
 
-        // New Edit Function
         window.editGuest = async (id) => {
             const g = allGuests.find(guest => guest.id === id);
             const { value: form } = await Swal.fire({
                 title: 'Edit Guest',
-                html: `
-                    <input id="eName" class="swal2-input" value="${g.name}">
-                    <input id="ePax" type="number" class="swal2-input" value="${g.pax}">
-                `,
+                html: `<input id="eName" class="swal2-input" value="${g.name}"><input id="ePax" type="number" class="swal2-input" value="${g.pax}">`,
                 preConfirm: () => [document.getElementById('eName').value, document.getElementById('ePax').value]
             });
-            if(form) {
-                await updateDoc(doc(db, "guests", id), { name: form[0], pax: form[1] });
-            }
+            if(form) await updateDoc(doc(db, "guests", id), { name: form[0], pax: form[1] });
         };
 
         window.sendWA = (p, n, t) => {

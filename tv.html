@@ -33,9 +33,6 @@
         .slide-in { animation: slideIn 0.5s ease-out forwards; opacity: 0; transform: translateX(20px); }
         @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
 
-        .pop-in { animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-
         /* Glass Cards */
         .glass-card {
             background: rgba(30, 41, 59, 0.7);
@@ -206,6 +203,9 @@
             // 2. Rebuild Lists
             snapshot.forEach((doc) => {
                 const guest = doc.data();
+
+                // Skip History Items (Checkout)
+                if (guest.status === 'history') return;
 
                 // Maintain Big Screen if someone is currently being called
                 if (guest.status === 'called') {
