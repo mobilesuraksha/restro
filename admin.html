@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal | Ram Kishan's</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        /* Login Background */
+        .login-bg { 
+            background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+            background-image: url('https://www.transparenttextures.com/patterns/cubes.png');
+        }
+
+        /* Sidebar Transition */
+        .sidebar { transition: transform 0.3s ease-in-out; }
+        
+        /* Status Indicators */
+        .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .dot-green { background-color: #22c55e; box-shadow: 0 0 0 2px #dcfce7; }
+        .dot-red { background-color: #ef4444; box-shadow: 0 0 0 2px #fee2e2; }
+        .dot-yellow { background-color: #eab308; box-shadow: 0 0 0 2px #fef9c3; }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div id="loginOverlay" class="fixed inset-0 login-bg z-[100] flex items-center justify-center">
+        <div class="bg-white/95 backdrop-blur p-8 rounded-3xl shadow-2xl w-full max-w-sm text-center border border-white/20">
+            <div class="w-20 h-20 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-5 text-3xl shadow-lg">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 tracking-tight">Manager Login</h2>
+            <p class="text-gray-500 text-sm mb-6">Ram Kishan's Sweets & Restaurant</p>
+            
+            <div class="relative">
+                <input type="password" id="pinInput" placeholder="Enter PIN" class="w-full p-4 border border-gray-200 rounded-xl text-center text-2xl tracking-[0.5em] font-bold outline-none focus:ring-2 ring-orange-500 transition-all">
+            </div>
+            
+            <button onclick="attemptLogin()" class="w-full mt-4 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-xl shadow-lg transition transform active:scale-95">
+                ACCESS DASHBOARD
+            </button>
+            <p id="loginError" class="text-red-500 text-xs font-bold mt-3 hidden animate-pulse">Access Denied: Incorrect PIN</p>
+        </div>
+    </div>
+
+    <div id="appContainer" class="flex h-screen overflow-hidden hidden">
+        
+        <aside id="sidebar" class="w-64 bg-white border-r border-gray-200 flex flex-col fixed md:relative h-full z-40 transform -translate-x-full md:translate-x-0 sidebar shadow-xl md:shadow-none">
+            <div class="h-20 flex items-center px-6 border-b border-gray-100 bg-orange-50">
+                <div class="w-10 h-10 bg-orange-600 text-white rounded-lg flex items-center justify-center mr-3 font-bold text-lg">RK</div>
+                <div>
+                    <h1 class="font-bold text-gray-800 leading-tight">Ram Kishan's</h1>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Admin Panel</p>
+                </div>
+            </div>
+
+            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+                <button onclick="nav('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center px-4 py-3 text-gray-600 rounded-xl hover:bg-orange-50 hover:text-orange-700 transition group font-medium bg-orange-50 text-orange-700">
+                    <i class="fas fa-chart-pie w-6 group-hover:scale-110 transition"></i> Dashboard
+                </button>
+                <button onclick="nav('queue')" id="nav-queue" class="nav-item w-full flex items-center px-4 py-3 text-gray-600 rounded-xl hover:bg-orange-50 hover:text-orange-700 transition group font-medium">
+                    <i class="fas fa-list-ul w-6 group-hover:scale-110 transition"></i> Live Queue
+                    <span id="badgeWait" class="ml-auto bg-orange-100 text-orange-700 py-0.5 px-2 rounded-full text-xs font-bold">0</span>
+                </button>
+                <button onclick="nav('floor')" id="nav-floor" class="nav-item w-full flex items-center px-4 py-3 text-gray-600 rounded-xl hover:bg-orange-50 hover:text-orange-700 transition group font-medium">
+                    <i class="fas fa-couch w-6 group-hover:scale-110 transition"></i> Floor Plan
+                </button>
+                <button onclick="nav('history')" id="nav-history" class="nav-item w-full flex items-center px-4 py-3 text-gray-600 rounded-xl hover:bg-orange-50 hover:text-orange-700 transition group font-medium">
+                    <i class="fas fa-history w-6 group-hover:scale-110 transition"></i> History Log
+                </button>
+            </nav>
+
+            <div class="p-4 border-t border-gray-100">
+                <button onclick="location.reload()" class="w-full flex items-center justify-center gap-2 text-red-500 hover:bg-red-50 p-3 rounded-xl transition font-bold text-sm">
+                    <i class="fas fa-power-off"></i> Sign Out
+                </button>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col min-w-0 bg-slate-50">
+            
+            <header class="h-20 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-30">
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleSidebar()" class="md:hidden text-gray-500 hover:text-gray-800 text-xl"><i class="fas fa-bars"></i></button>
+                    <h2 id="pageTitle" class="text-xl font-bold text-gray-800">Dashboard Overview</h2>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-right hidden sm:block">
+                        <div class="text-sm font-bold text-gray-800">Manager Account</div>
+                        <div class="text-xs text-green-500 font-bold"><span class="status-dot dot-green"></span>Online</div>
+                    </div>
+                    <div class="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center text-slate-500 border border-slate-300">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-4 md:p-8">
+
+                <div id="view-dashboard" class="space-y-6 fade-view">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+                            <div class="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 text-2xl"><i class="fas fa-user-clock"></i></div>
+                            <div>
+                                <p class="text-gray-500 text-xs font-bold uppercase">Waiting Now</p>
+                                <h3 class="text-2xl font-bold text-gray-800" id="statWaiting">0</h3>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+                            <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-2xl"><i class="fas fa-check-circle"></i></div>
+                            <div>
+                                <p class="text-gray-500 text-xs font-bold uppercase">Seated Today</p>
+                                <h3 class="text-2xl font-bold text-gray-800" id="statSeated">0</h3>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+                            <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-2xl"><i class="fas fa-chair"></i></div>
+                            <div>
+                                <p class="text-gray-500 text-xs font-bold uppercase">Active Tables</p>
+                                <h3 class="text-2xl font-bold text-gray-800" id="statActive">0</h3>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+                            <div class="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 text-2xl"><i class="fas fa-users"></i></div>
+                            <div>
+                                <p class="text-gray-500 text-xs font-bold uppercase">Total Guests</p>
+                                <h3 class="text-2xl font-bold text-gray-800" id="statTotal">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                            <h3 class="font-bold text-gray-800 mb-4">Quick Add Guest</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <input type="text" id="qName" placeholder="Name" class="p-3 bg-gray-50 border rounded-xl font-semibold">
+                                <input type="tel" id="qPhone" placeholder="Mobile" class="p-3 bg-gray-50 border rounded-xl font-semibold">
+                                <input type="number" id="qPax" placeholder="Pax" class="p-3 bg-gray-50 border rounded-xl font-semibold">
+                                <button onclick="quickAdd()" class="bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-700 transition">ADD</button>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+                            <div class="relative z-10">
+                                <h3 class="font-bold text-lg">System Status</h3>
+                                <p class="text-indigo-200 text-sm mt-1">Live Sync Active</p>
+                                <div class="mt-4 flex items-center gap-2">
+                                    <span class="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-green-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                                    <span class="font-bold text-sm">Online</span>
+                                </div>
+                            </div>
+                            <i class="fas fa-wifi absolute -bottom-4 -right-4 text-9xl text-white opacity-10"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-queue" class="hidden fade-view">
+                    <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-gray-50 text-gray-500 uppercase text-xs font-bold border-b border-gray-100">
+                                    <tr>
+                                        <th class="p-5">Token</th>
+                                        <th class="p-5">Guest Details</th>
+                                        <th class="p-5">Pax</th>
+                                        <th class="p-5">Preferences</th>
+                                        <th class="p-5">Status</th>
+                                        <th class="p-5 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="queueTableBody" class="divide-y divide-gray-50 text-sm text-gray-700">
+                                    </tbody>
+                            </table>
+                        </div>
+                        <div id="emptyQueueMsg" class="hidden p-10 text-center text-gray-400">
+                            <i class="fas fa-mug-hot text-4xl mb-3 opacity-20"></i>
+                            <p>No guests waiting currently.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-floor" class="hidden fade-view">
+                    <div class="flex justify-end mb-4">
+                        <button onclick="addTable()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-md flex items-center gap-2">
+                            <i class="fas fa-plus"></i> Add New Table
+                        </button>
+                    </div>
+                    <div id="tablesGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                        </div>
+                </div>
+
+                <div id="view-history" class="hidden fade-view">
+                    <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+                        <div class="p-4 border-b border-gray-100 font-bold text-gray-700 bg-gray-50">
+                            Today's Activity Log
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead class="bg-white text-gray-400 text-xs uppercase font-bold border-b">
+                                    <tr>
+                                        <th class="p-4">Time</th>
+                                        <th class="p-4">Guest</th>
+                                        <th class="p-4">Status</th>
+                                        <th class="p-4">Table</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyBody" class="divide-y divide-gray-50 text-sm">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, updateDoc, deleteDoc, doc, query, orderBy, serverTimestamp, getDocs, where } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+
+        // FIREBASE CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyAVZfBaUEQxszbuDXsoFJ6uW2_5XqBulRE",
+            authDomain: "waiting-9617c.firebaseapp.com",
+            projectId: "waiting-9617c",
+            storageBucket: "waiting-9617c.firebasestorage.app",
+            messagingSenderId: "698708284819",
+            appId: "1:698708284819:web:3732cf42140cba84494466"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- GLOBAL VARIABLES ---
+        let allGuests = [];
+        let allTables = [];
+
+        // --- 1. AUTHENTICATION ---
+        window.attemptLogin = () => {
+            const pin = document.getElementById('pinInput').value;
+            if(pin === "12345") {
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('appContainer').classList.remove('hidden');
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        };
+
+        // --- 2. NAVIGATION & UI ---
+        window.nav = (viewId) => {
+            // Hide all views
+            ['dashboard', 'queue', 'floor', 'history'].forEach(v => {
+                document.getElementById('view-'+v).classList.add('hidden');
+                document.getElementById('nav-'+v).classList.remove('bg-orange-50', 'text-orange-700');
+            });
+
+            // Show selected
+            document.getElementById('view-'+viewId).classList.remove('hidden');
+            document.getElementById('nav-'+viewId).classList.add('bg-orange-50', 'text-orange-700');
+            
+            // Update Title
+            const titles = { 'dashboard': 'Overview', 'queue': 'Live Waitlist', 'floor': 'Floor Management', 'history': 'Daily Log' };
+            document.getElementById('pageTitle').innerText = titles[viewId];
+
+            // Close sidebar on mobile
+            if(window.innerWidth < 768) document.getElementById('sidebar').classList.add('-translate-x-full');
+        };
+
+        window.toggleSidebar = () => {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+        };
+
+        // --- 3. DATA LISTENERS ---
+        
+        // Listen to Guests
+        const qGuests = query(collection(db, "guests"), orderBy("createdAt", "desc"));
+        onSnapshot(qGuests, (snap) => {
+            allGuests = [];
+            let waitCount = 0;
+            let seatedCount = 0;
+            let totalCount = 0;
+            
+            const tbody = document.getElementById('queueTableBody');
+            const hbody = document.getElementById('historyBody');
+            tbody.innerHTML = "";
+            hbody.innerHTML = "";
+
+            snap.forEach(d => {
+                const g = { id: d.id, ...d.data() };
+                allGuests.push(g);
+                totalCount++;
+
+                // Counters
+                if(g.status === 'waiting') waitCount++;
+                if(g.status === 'seated') seatedCount++;
+
+                // Queue Table Render (Waiting/Called)
+                if(g.status === 'waiting' || g.status === 'called') {
+                    renderQueueRow(tbody, g);
+                } 
+                // History Table Render (Seated)
+                else {
+                    renderHistoryRow(hbody, g);
+                }
+            });
+
+            // Update Stats
+            document.getElementById('statWaiting').innerText = waitCount;
+            document.getElementById('badgeWait').innerText = waitCount;
+            document.getElementById('statSeated').innerText = seatedCount;
+            document.getElementById('statTotal').innerText = totalCount;
+
+            // Empty State Toggle
+            if(waitCount === 0) document.getElementById('emptyQueueMsg').classList.remove('hidden');
+            else document.getElementById('emptyQueueMsg').classList.add('hidden');
+        });
+
+        // Listen to Tables
+        const qTables = query(collection(db, "tables"), orderBy("name", "asc"));
+        onSnapshot(qTables, (snap) => {
+            allTables = [];
+            let activeCount = 0;
+            const grid = document.getElementById('tablesGrid');
+            grid.innerHTML = "";
+
+            snap.forEach(d => {
+                const t = { id: d.id, ...d.data() };
+                allTables.push(t);
+                if(t.status === 'occupied') activeCount++;
+                renderTableCard(grid, t);
+            });
+
+            document.getElementById('statActive').innerText = activeCount;
+        });
+
+        // --- 4. RENDER FUNCTIONS ---
+
+        function renderQueueRow(container, g) {
+            let badge = g.status === 'waiting' 
+                ? `<span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold border border-yellow-200">WAITING</span>`
+                : `<span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold border border-blue-200 animate-pulse">CALLED</span>`;
+
+            let prefs = [];
+            if(g.area) prefs.push(`<i class="fas fa-map-marker-alt text-gray-400"></i> ${g.area}`);
+            if(g.preference && g.preference !== 'Regular') prefs.push(`<i class="fas fa-utensils text-gray-400"></i> ${g.preference}`);
+            if(g.isBirthday) prefs.push(`<span class="text-pink-500 font-bold text-xs">🎂 Bday</span>`);
+            if(g.babyChair) prefs.push(`<span class="text-indigo-500 font-bold text-xs">👶 Chair</span>`);
+
+            let buttons = '';
+            if(g.status === 'waiting') {
+                buttons = `
+                    <button onclick="assignPrompt('${g.id}', '${g.name}', '${g.pax}')" class="bg-slate-900 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-slate-700 shadow transition mr-2">Assign Table</button>
+                    <button onclick="editGuest('${g.id}')" class="text-gray-400 hover:text-blue-600 p-2"><i class="fas fa-edit"></i></button>
+                    <button onclick="deleteGuest('${g.id}')" class="text-gray-400 hover:text-red-600 p-2"><i class="fas fa-trash"></i></button>
+                `;
+            } else {
+                buttons = `
+                    <button onclick="markSeated('${g.id}')" class="bg-green-600 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-green-700 shadow mr-2"><i class="fas fa-check"></i> Seated</button>
+                    <button onclick="sendWA('${g.phone}', '${g.name}', '${g.table}')" class="bg-green-100 text-green-600 p-2 rounded-lg hover:bg-green-200 transition"><i class="fab fa-whatsapp text-lg"></i></button>
+                `;
+            }
+
+            container.innerHTML += `
+                <tr class="hover:bg-gray-50 transition group">
+                    <td class="p-5 font-mono font-bold text-orange-600 text-lg">#${g.token}</td>
+                    <td class="p-5">
+                        <div class="font-bold text-gray-800">${g.name}</div>
+                        <div class="text-xs text-gray-400">${g.phone}</div>
+                    </td>
+                    <td class="p-5 font-bold text-gray-600 text-lg">${g.pax} <span class="text-xs font-normal text-gray-400">ppl</span></td>
+                    <td class="p-5 text-sm space-x-2">${prefs.join(' ')}</td>
+                    <td class="p-5">${badge}</td>
+                    <td class="p-5 text-right">${buttons}</td>
+                </tr>
+            `;
+        }
+
+        function renderHistoryRow(container, g) {
+            // Convert Firestore Timestamp to readable time
+            let timeStr = "Today";
+            if(g.createdAt && g.createdAt.seconds) {
+                const date = new Date(g.createdAt.seconds * 1000);
+                timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+
+            container.innerHTML += `
+                <tr class="hover:bg-gray-50">
+                    <td class="p-4 text-gray-500 font-mono text-xs">${timeStr}</td>
+                    <td class="p-4 font-bold text-gray-700">${g.name} <span class="text-gray-400 font-normal">(${g.pax} Pax)</span></td>
+                    <td class="p-4"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-bold">SEATED</span></td>
+                    <td class="p-4 font-bold text-gray-600">${g.table}</td>
+                </tr>
+            `;
+        }
+
+        function renderTableCard(container, t) {
+            const isFree = t.status === 'free';
+            const statusColor = isFree ? 'border-l-4 border-green-500' : 'border-l-4 border-red-500';
+            const bg = isFree ? 'bg-white' : 'bg-red-50';
+            const icon = isFree ? 'text-green-500' : 'text-red-500';
+            const statusText = isFree ? 'Available' : 'Occupied';
+
+            let actionBtn = isFree 
+                ? `<button onclick="deleteTable('${t.id}')" class="text-gray-300 hover:text-red-500"><i class="fas fa-trash"></i></button>`
+                : `<button onclick="forceFree('${t.id}')" class="text-xs font-bold text-blue-600 underline">Free Up</button>`;
+
+            container.innerHTML += `
+                <div class="${bg} p-5 rounded-xl shadow-sm hover:shadow-md transition ${statusColor} relative">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">${t.name}</h3>
+                            <p class="text-sm text-gray-500 font-medium">${t.seats} Seats</p>
+                        </div>
+                        <i class="fas fa-circle ${icon} text-xs"></i>
+                    </div>
+                    <div class="mt-4 flex justify-between items-end">
+                        <span class="text-xs font-bold uppercase text-gray-400 tracking-wider">${statusText}</span>
+                        ${actionBtn}
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- 5. ACTIONS ---
+
+        // Quick Add from Dashboard
+        window.quickAdd = async () => {
+            const n = document.getElementById('qName').value;
+            const p = document.getElementById('qPhone').value;
+            const x = document.getElementById('qPax').value;
+            if(!n) return;
+            
+            await addDoc(collection(db, "guests"), {
+                name: n, phone: p, pax: x, token: Math.floor(100+Math.random()*900),
+                status: 'waiting', createdAt: serverTimestamp(), area: 'Any', preference: 'Regular'
+            });
+            
+            // Clear inputs
+            document.getElementById('qName').value = "";
+            document.getElementById('qPhone').value = "";
+            document.getElementById('qPax').value = "";
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Guest Added', showConfirmButton: false, timer: 1500 });
+        };
+
+        // Assign Table
+        window.assignPrompt = async (gid, name, pax) => {
+            const freeTables = allTables.filter(t => t.status === 'free');
+            let opts = {};
+            freeTables.forEach(t => opts[t.id] = `${t.name} (${t.seats} Seats)`);
+
+            if(Object.keys(opts).length === 0) return Swal.fire("Full House", "No tables available", "warning");
+
+            const { value: tid } = await Swal.fire({
+                title: `Seat ${name}`,
+                text: `Party Size: ${pax}`,
+                input: 'select',
+                inputOptions: opts,
+                inputPlaceholder: 'Select a Table',
+                showCancelButton: true
+            });
+
+            if(tid) {
+                const tName = opts[tid].split(' (')[0];
+                await updateDoc(doc(db, "guests", gid), { status: 'called', table: tName });
+                await updateDoc(doc(db, "tables", tid), { status: 'occupied' });
+                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Assigned', showConfirmButton: false, timer: 1500 });
+            }
+        };
+
+        window.markSeated = async (id) => {
+            await updateDoc(doc(db, "guests", id), { status: 'seated' });
+        };
+
+        window.forceFree = async (tid) => {
+            if(confirm("Force free this table?")) {
+                await updateDoc(doc(db, "tables", tid), { status: 'free' });
+            }
+        };
+
+        window.addTable = async () => {
+            const { value: f } = await Swal.fire({
+                title: 'New Table',
+                html: '<input id="tn" class="swal2-input" placeholder="Name (T-1)"><input id="ts" type="number" class="swal2-input" placeholder="Seats">',
+                preConfirm: () => [document.getElementById('tn').value, document.getElementById('ts').value]
+            });
+            if(f && f[0]) await addDoc(collection(db, "tables"), { name: f[0], seats: f[1], status: 'free' });
+        };
+
+        window.deleteTable = async (id) => { if(confirm("Delete this table?")) await deleteDoc(doc(db, "tables", id)); };
+        window.deleteGuest = async (id) => { if(confirm("Remove guest?")) await deleteDoc(doc(db, "guests", id)); };
+
+        // New Edit Function
+        window.editGuest = async (id) => {
+            const g = allGuests.find(guest => guest.id === id);
+            const { value: form } = await Swal.fire({
+                title: 'Edit Guest',
+                html: `
+                    <input id="eName" class="swal2-input" value="${g.name}">
+                    <input id="ePax" type="number" class="swal2-input" value="${g.pax}">
+                `,
+                preConfirm: () => [document.getElementById('eName').value, document.getElementById('ePax').value]
+            });
+            if(form) {
+                await updateDoc(doc(db, "guests", id), { name: form[0], pax: form[1] });
+            }
+        };
+
+        window.sendWA = (p, n, t) => {
+            let ph = p.replace(/\D/g, '');
+            if(ph.length === 10) ph = "91" + ph;
+            window.open(`https://wa.me/${ph}?text=Hello ${n}, Your table ${t} is ready at Ram Kishan's!`, '_blank');
+        };
+
+    </script>
+</body>
+</html>
