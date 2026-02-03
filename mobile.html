@@ -5,10 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Track Status | Ram Kishan's</title>
     
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ea580c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1046/1046755.png">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <style>
@@ -19,17 +24,19 @@
             background-size: 20px 20px;
         }
         .brand-font { font-family: 'Playfair Display', serif; }
-        
-        /* Smooth Fade In */
         .fade-in { animation: fadeIn 0.5s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Pulse for Waiting Status */
         .pulse-soft { animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body class="flex flex-col items-center justify-center min-h-screen p-4 pb-20">
+
+    <div id="installContainer" class="hidden w-full max-w-sm mb-4">
+        <button id="btnInstall" class="w-full bg-black text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg">
+            <i class="fas fa-download"></i> Install App
+        </button>
+    </div>
 
     <div id="searchCard" class="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden fade-in border border-orange-100">
         <div class="bg-gradient-to-r from-orange-600 to-red-600 p-8 text-center text-white">
@@ -42,8 +49,8 @@
 
         <div class="p-8">
             <div class="text-center mb-6">
-                <h2 class="text-xl font-bold text-gray-800">Check Your Status</h2>
-                <p class="text-gray-400 text-sm mt-1">Enter your registered mobile number</p>
+                <h2 class="text-xl font-bold text-gray-800">Check Status</h2>
+                <p class="text-gray-400 text-sm mt-1">Enter your mobile number</p>
             </div>
 
             <div class="relative group mb-6">
@@ -53,36 +60,28 @@
                 <input type="tel" id="userPhone" placeholder="Mobile Number" class="w-full pl-12 pr-4 py-4 bg-orange-50 border border-orange-100 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 font-bold text-gray-800 tracking-widest text-lg transition-all shadow-inner">
             </div>
 
-            <button id="btnSearch" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold text-lg shadow-xl shadow-slate-900/20 hover:bg-slate-800 active:scale-95 transition-all flex items-center justify-center gap-2">
-                <span>Find My Token</span>
-                <i class="fas fa-search"></i>
+            <button id="btnSearch" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold text-lg shadow-xl hover:bg-slate-800 active:scale-95 transition-all">
+                Find My Token
             </button>
         </div>
     </div>
 
     <div id="resultCard" class="hidden w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden fade-in relative">
-        
         <div id="statusHeader" class="bg-amber-400 p-8 text-center text-white transition-colors duration-500">
-            <div id="statusIcon" class="text-5xl mb-3 drop-shadow-md">
-                <i class="fas fa-clock"></i>
-            </div>
+            <div id="statusIcon" class="text-5xl mb-3 drop-shadow-md"><i class="fas fa-clock"></i></div>
             <h2 id="statusTitle" class="text-3xl font-black uppercase tracking-widest drop-shadow-sm">WAITING</h2>
             <p id="statusMsg" class="font-medium opacity-90 mt-1">Please wait in the lobby</p>
         </div>
 
-        <div class="p-8 text-center relative bg-white">
-            <div class="absolute top-0 left-0 w-6 h-6 bg-[#f8fafc] -translate-x-1/2 -translate-y-1/2 rounded-full shadow-inner"></div>
-            <div class="absolute top-0 right-0 w-6 h-6 bg-[#f8fafc] translate-x-1/2 -translate-y-1/2 rounded-full shadow-inner"></div>
-
+        <div class="p-8 text-center bg-white relative">
             <p class="text-xs font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Token Number</p>
             <div id="dispToken" class="text-7xl font-black text-slate-800 tracking-tighter mb-6">#---</div>
             
             <div class="bg-slate-50 rounded-2xl p-5 border border-slate-100 shadow-sm">
                 <div class="flex items-center justify-center gap-2 mb-1">
                     <i class="fas fa-user-circle text-gray-400"></i>
-                    <h3 id="dispName" class="font-bold text-gray-800 text-lg">Guest Name</h3>
+                    <h3 id="dispName" class="font-bold text-gray-800 text-lg">Guest</h3>
                 </div>
-                
                 <div class="flex justify-center gap-4 mt-3 pt-3 border-t border-gray-200">
                     <div class="text-center">
                         <div class="text-xs text-gray-400 uppercase font-bold">Guests</div>
@@ -96,17 +95,41 @@
                 </div>
             </div>
 
-            <button onclick="location.reload()" class="mt-8 text-sm text-gray-400 font-bold hover:text-orange-600 transition underline decoration-2 decoration-orange-200">
-                Check another number
-            </button>
+            <button onclick="location.reload()" class="mt-8 text-sm text-gray-400 font-bold hover:text-orange-600 transition underline">Check another number</button>
         </div>
     </div>
 
     <script type="module">
+        // PWA INSTALL LOGIC
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+
+        let deferredPrompt;
+        const installBtn = document.getElementById('btnInstall');
+        const installContainer = document.getElementById('installContainer');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installContainer.classList.remove('hidden');
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    installContainer.classList.add('hidden');
+                }
+                deferredPrompt = null;
+            }
+        });
+
+        // FIREBASE LOGIC
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
         import { getFirestore, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
-        // CONFIG (Your Provided Keys)
         const firebaseConfig = {
             apiKey: "AIzaSyAVZfBaUEQxszbuDXsoFJ6uW2_5XqBulRE",
             authDomain: "waiting-9617c.firebaseapp.com",
@@ -119,134 +142,63 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- SEARCH FUNCTION ---
         document.getElementById('btnSearch').addEventListener('click', () => {
             const phoneInput = document.getElementById('userPhone').value.trim();
             const btn = document.getElementById('btnSearch');
+            if (!phoneInput) return alert("Please enter mobile number.");
 
-            // Basic Validation
-            if (!phoneInput) {
-                alert("Please enter a valid mobile number.");
-                return;
-            }
-
-            // UI Loading State
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Finding...';
             btn.disabled = true;
-            btn.classList.add('opacity-75');
 
-            // Query Firebase
             const q = query(collection(db, "guests"), where("phone", "==", phoneInput));
 
-            // Start Live Listener
-            const unsubscribe = onSnapshot(q, (snapshot) => {
+            onSnapshot(q, (snapshot) => {
                 if (snapshot.empty) {
-                    alert("No booking found for this number! Please ask the reception.");
-                    // Reset Button
-                    btn.innerHTML = 'Find My Token <i class="fas fa-search"></i>';
+                    alert("No booking found! Ask reception.");
+                    btn.innerHTML = 'Find My Token';
                     btn.disabled = false;
-                    btn.classList.remove('opacity-75');
                     return;
                 }
-
-                // If multiple entries exist for the same phone, get the LATEST one
                 const docs = [];
                 snapshot.forEach(doc => docs.push(doc.data()));
-                
-                // Sort by time (Newest First)
-                // Assuming createdAt exists, otherwise simple array order
-                docs.sort((a, b) => {
-                    const tA = a.createdAt?.seconds || 0;
-                    const tB = b.createdAt?.seconds || 0;
-                    return tB - tA;
-                });
-
-                const data = docs[0]; // The most recent booking
-                updateUI(data);
-
-            }, (error) => {
-                console.error("Error:", error);
-                alert("Connection failed. Please check internet.");
-                btn.innerHTML = 'Try Again';
-                btn.disabled = false;
+                docs.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+                updateUI(docs[0]);
             });
         });
 
-        // --- UPDATE UI FUNCTION ---
         function updateUI(data) {
-            // Hide Search, Show Result
             document.getElementById('searchCard').classList.add('hidden');
             document.getElementById('resultCard').classList.remove('hidden');
-
-            // Populate Text
             document.getElementById('dispToken').innerText = "#" + data.token;
             document.getElementById('dispName').innerText = data.name;
             document.getElementById('dispPax').innerText = data.pax;
             document.getElementById('dispArea').innerText = data.area || "Any";
 
-            // Get Elements for Styling
             const header = document.getElementById('statusHeader');
             const icon = document.getElementById('statusIcon');
             const title = document.getElementById('statusTitle');
             const msg = document.getElementById('statusMsg');
 
-            // --- STATUS LOGIC ---
-            
             if (data.status === 'called') {
-                // 1. TABLE READY (Green)
                 header.className = "bg-green-600 p-8 text-center text-white transition-colors duration-500 shadow-lg";
                 title.innerText = "TABLE READY!";
-                msg.innerText = `Please proceed to Table ${data.table}`;
-                
-                // Icon Animation
+                msg.innerText = `Proceed to Table ${data.table}`;
                 icon.innerHTML = '<i class="fas fa-utensils"></i>';
-                icon.className = "text-5xl mb-3 animate-bounce drop-shadow-md";
-
-                // Trigger Confetti (Only runs once ideally, but runs on update here which is fine)
-                launchConfetti();
-
+                icon.className = "text-5xl mb-3 animate-bounce";
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
             } else if (data.status === 'seated') {
-                // 2. SEATED (Gray/Dark)
                 header.className = "bg-slate-800 p-8 text-center text-white transition-colors duration-500";
                 title.innerText = "SEATED";
-                msg.innerText = "Enjoy your meal at Ram Kishan's";
-                
+                msg.innerText = "Enjoy your meal!";
                 icon.innerHTML = '<i class="fas fa-check-circle"></i>';
                 icon.className = "text-5xl mb-3";
-
             } else {
-                // 3. WAITING (Amber/Yellow)
                 header.className = "bg-amber-500 p-8 text-center text-white transition-colors duration-500";
                 title.innerText = "WAITING";
-                msg.innerText = "We are preparing your table...";
-                
+                msg.innerText = "Preparing your table...";
                 icon.innerHTML = '<i class="fas fa-hourglass-half"></i>';
                 icon.className = "text-5xl mb-3 pulse-soft";
             }
-        }
-
-        // --- CONFETTI FUNCTION ---
-        function launchConfetti() {
-            var duration = 3 * 1000;
-            var animationEnd = Date.now() + duration;
-            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
-
-            function randomInRange(min, max) {
-              return Math.random() * (max - min) + min;
-            }
-
-            var interval = setInterval(function() {
-              var timeLeft = animationEnd - Date.now();
-
-              if (timeLeft <= 0) {
-                return clearInterval(interval);
-              }
-
-              var particleCount = 50 * (timeLeft / duration);
-              // since particles fall down, start a bit higher than random
-              confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
-              confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
-            }, 250);
         }
     </script>
 </body>
